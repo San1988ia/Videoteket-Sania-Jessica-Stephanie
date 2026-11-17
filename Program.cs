@@ -5,8 +5,8 @@ using Dapper;
 DotNetEnv.Env.Load();
 
 string connectionString =
-    Environment.GetEnvironmentVariable("VIDEOTEK_CONNECTION_STRING")
-    ?? throw new InvalidOperationException("Miljövariabeln VIDEOTEK_CONNECTION_STRING saknas.");
+    Environment.GetEnvironmentVariable("VIDEOTEKEt_CONNECTION_STRING")
+    ?? throw new InvalidOperationException("Miljövariabeln VIDEOTEKET_CONNECTION_STRING saknas.");
 using IDbConnection db = new MySqlConnection(connectionString);
 
 // Väldigt basic meny, vi kan utveckla den framöver
@@ -25,10 +25,16 @@ Console.WriteLine("4: Avsluta");
 switch (Console.ReadLine())
 {
     case "1":
-            {
-               Console.WriteLine("Ditt val: 1");
-               break; 
-            }
+{
+    var titlar = db.Query<string>("SELECT Title FROM Film");
+
+    foreach (var titel in titlar)
+    {
+        Console.WriteLine(titel);
+    }
+
+    break;
+}
                 case "2":
             {
                Console.WriteLine("Ditt val: 2");
