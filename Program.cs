@@ -1,8 +1,8 @@
-﻿// Väldigt basic meny, vi kan utveckla den framöver
+﻿
 
-bool MenuLoop = true;
+// Väldigt basic meny, vi kan utveckla den framöver
 
-while (MenuLoop)
+while (true)
 {
 Console.WriteLine("Hej! Välkommen till Videoteket.");
 Console.WriteLine("Välj ditt menyval nedan:");
@@ -35,8 +35,7 @@ switch (Console.ReadLine())
             {
                 Console.WriteLine("Ditt val: 4");
                 Console.WriteLine("Programmet avslutas");
-                MenuLoop = false;
-                break;
+                return;
             }
     
     default:
