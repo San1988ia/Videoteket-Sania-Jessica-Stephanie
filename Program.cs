@@ -75,3 +75,11 @@ class FilmCassette
     public string Barcode {get; set;}
     public DateTime EditionDate {get; set;}
 }
+
+class Rental
+{
+    public int Id {get; set;}
+    public int CustomerId {get; set;}
+    public DateTime RentalDateTime {get; set;}
+    public int ReceiptNumber {get; set;}
+}
