@@ -1,4 +1,13 @@
-﻿
+﻿using System.Data;
+using MySql.Data.MySqlClient;
+using Dapper;
+
+DotNetEnv.Env.Load();
+
+string connectionString =
+    Environment.GetEnvironmentVariable("VIDEOTEK_CONNECTION_STRING")
+    ?? throw new InvalidOperationException("Miljövariabeln VIDEOTEK_CONNECTION_STRING saknas.");
+using IDbConnection db = new MySqlConnection(connectionString);
 
 // Väldigt basic meny, vi kan utveckla den framöver
 
