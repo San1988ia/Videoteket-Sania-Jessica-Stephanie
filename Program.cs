@@ -5,7 +5,7 @@ using Dapper;
 DotNetEnv.Env.Load();
 
 string connectionString =
-    Environment.GetEnvironmentVariable("VIDEOTEKEt_CONNECTION_STRING")
+    Environment.GetEnvironmentVariable("VIDEOTEKET_CONNECTION_STRING")
     ?? throw new InvalidOperationException("Miljövariabeln VIDEOTEKET_CONNECTION_STRING saknas.");
 using IDbConnection db = new MySqlConnection(connectionString);
 
