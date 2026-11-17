@@ -67,3 +67,11 @@ class Film
     public bool IsActive {get; set;}
     public bool IsNew {get; set;}
 }
+
+class FilmCassette
+{
+    public int Id {get; set;}
+    public int FilmId {get; set;}
+    public string Barcode {get; set;}
+    public DateTime EditionDate {get; set;}
+}
