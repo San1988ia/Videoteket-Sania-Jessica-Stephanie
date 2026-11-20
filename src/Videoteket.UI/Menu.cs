@@ -41,7 +41,22 @@ class MainMenu
                     Console.WriteLine("Ditt val: 3");
                     break;
                 case "4":
-                    Console.WriteLine("Ditt val: 4");
+                    Console.WriteLine("Ditt val: Lägg till kund");
+                    Console.WriteLine("Lägg till namn (Förnamn Efternamn):");
+                    string name = Console.ReadLine();
+                    Console.WriteLine("Lägg till email (namn@email.com):");
+                    string email = Console.ReadLine();
+                    Console.WriteLine("Lägg till telefon (1234567890):");
+                    string telephone = Console.ReadLine();
+                    Console.WriteLine("Lägg till adress (Gatnamn 1, Staden):");
+                    string address = Console.ReadLine();
+                    Console.WriteLine("Lägg till personnummer (ÅÅÅÅMMDDxxxx):");
+                    string personNumber = Console.ReadLine();
+
+                    string sql = @"INSERT INTO Customer (Name, Email, Telephone, Address, PersonNumber)
+                    VALUES (@Name, @Email, @Telephone, @Address, @PersonNumber)";
+
+                    _db.Execute(sql, new { Name = name, Email = email, Telephone = telephone, Address = address, PersonNumber = personNumber });
                     break;
                 case "5":
                     Console.WriteLine("Ditt val: 5");
