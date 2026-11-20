@@ -63,13 +63,9 @@ class MainMenu
                 case "7":
                     new ListUnreturnedFilms(_db).Run();
                     break;
-
                 case "8":
                     new CalculateLateFees(_db).Run();
                     break;
-
-
-
                 case "9":
                     new AddFilm(_filmRepository).Run();
                     break;
@@ -84,12 +80,5 @@ class MainMenu
                     break;
             }
         }
-    }
-
-    private class LateFilm
-    {
-        public string Title { get; set; }
-        public bool IsNew { get; set; }
-        public int LateDays { get; set; }
     }
 }
