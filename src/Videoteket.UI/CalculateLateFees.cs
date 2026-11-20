@@ -14,29 +14,23 @@ class CalculateLateFees
     {
         Console.WriteLine("Förseningskostnad för återlämnade filmer:");
 
-        var senaFilmer = _db.Query<LateFilm>(@"
-            SELECT Film.Title,
-                   Film.IsNew,
-                   DATEDIFF(RentFilm.ReturnDate, RentFilm.DueDate) AS LateDays
-            FROM RentFilm
-            JOIN FilmCassette ON FilmCassette.Id = RentFilm.CassetteId
-            JOIN Film ON Film.Id = FilmCassette.FilmId
-            WHERE RentFilm.ReturnDate IS NOT NULL
-              AND RentFilm.ReturnDate > RentFilm.DueDate");
+        var senaFilmer = _db.Query<LateFilm>(
+            "CalculateLateFees",
+            commandType: CommandType.StoredProcedure);
+            
 
         foreach (var film in senaFilmer)
         {
-            int avgiftPerDygn = film.IsNew ? 49 : 29;
-            int kostnad = film.LateDays * avgiftPerDygn;
+        
 
-            Console.WriteLine($"{film.Title}: {film.LateDays} sena dygn, {kostnad} kr");
+            Console.WriteLine($"{film.Title}: {film.LateDays} sena dygn, {film.Cost} kr");
         }
     }
 
     private class LateFilm
     {
         public string Title { get; set; } = string.Empty;
-        public bool IsNew { get; set; }
         public int LateDays { get; set; }
+        public int Cost {get; set; }
     }
 }
