@@ -115,42 +115,11 @@ class MainMenu
                     }
                     break;
                 case "7":
-                    Console.WriteLine("Filmer som inte är återlämnade:");
-
-                    var filmer = _db.Query<string>(@"
-                    SELECT DISTINCT f.Title
-                    FROM RentFilm rf
-                    JOIN FilmCassette fc ON fc.Id = rf.CassetteId
-                    JOIN Film f ON f.Id = fc.FilmId
-                    WHERE rf.ReturnDate is null");
-
-                foreach (var film in filmer)
-                {
-                 Console.WriteLine(film);
-                }
+                    new ListUnreturnedFilms(_db).Run();
                     break;
 
                 case "8":
-                    Console.WriteLine("Förseningskostnad för återlämnade filmer:");
-
-                    var senaFilmer = _db.Query<LateFilm>(@"
-                    SELECT Film.Title, 
-                    Film.IsNew, 
-                    DATEDIFF(RentFilm.ReturnDate, 
-                    RentFilm.DueDate) AS LateDays 
-                    FROM RentFilm 
-                    JOIN FilmCassette ON FilmCassette.Id = RentFilm.CassetteId 
-                    JOIN Film ON Film.Id = FilmCassette.FilmId 
-                    WHERE RentFilm.ReturnDate 
-                    IS NOT NULL AND RentFilm.ReturnDate > RentFilm.DueDate");
-
-                    foreach (var film in senaFilmer)
-                    {
-                        int avgiftPerDygn = film.IsNew ? 49 : 29;
-                        int kostnad = film.LateDays * avgiftPerDygn;
-
-                        Console.WriteLine($"{film.Title}: {film.LateDays} sena dygn, {kostnad} kr");
-                    }
+                    new CalculateLateFees(_db).Run();
                     break;
 
 
@@ -237,10 +206,4 @@ class MainMenu
         }
     }
 
-    private class LateFilm
-    {
-        public string Title { get; set; }
-        public bool IsNew { get; set; }
-        public int LateDays { get; set; }
-    }
 }
