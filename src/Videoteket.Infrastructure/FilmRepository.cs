@@ -26,6 +26,22 @@ class FilmRepository
             "SELECT Id, Title, ReleaseDate, Description, IsActive, IsNew FROM Film").ToList();
     }
 
+    public Film? GetById(int filmId)
+    {
+        using var db = new MySqlConnection(_connectionString);
+        return db.QuerySingleOrDefault<Film>(
+            "SELECT Id, Title, IsNew FROM Film WHERE Id = @Id",
+            new { Id = filmId });
+    }
+
+    public int UpdateStatus(int filmId, bool isNew)
+    {
+        using var db = new MySqlConnection(_connectionString);
+        return db.Execute(
+            "UPDATE Film SET IsNew = @IsNew WHERE Id = @Id",
+            new { IsNew = isNew, Id = filmId });
+    }
+
     public int DeleteById(int filmId)
     {
         using var db = new MySqlConnection(_connectionString);
