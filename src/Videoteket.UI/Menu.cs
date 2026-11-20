@@ -108,18 +108,18 @@ class MainMenu
                         break;
                     }
 
-                    var film = _db.Query<Film>( 
+                    var movie = _db.Query<Film>( 
                         "SELECT Id, Title, IsNew FROM Film WHERE Id = @Id",
                         new { Id = filmId}
                     ).FirstOrDefault();
 
-                    if (film == null)
+                    if (movie == null)
                     {
                         Console.WriteLine("Filmen hittades inte.");
                         break;
                     }
 
-                    Console.WriteLine($"Du har valt: {film.Title}");
+                    Console.WriteLine($"Du har valt: {movie.Title}");
                     Console.WriteLine("1: Markera som ny");
                     Console.WriteLine("2: Markera som gammal");
                     string? val = Console.ReadLine();
@@ -134,7 +134,7 @@ class MainMenu
 
                     int result = _db.Execute(
                         "UPDATE Film SET IsNew = @IsNew WHERE Id = @Id",
-                        new { IsNew = nyStatus, Id = film.Id}
+                        new { IsNew = nyStatus, Id = movie.Id}
                      );
 
                      if (result > 0)
