@@ -25,7 +25,8 @@ class MainMenu
             Console.WriteLine("5: Ta bort kund");
             Console.WriteLine("6: Ändra status på film");
             Console.WriteLine("7: Se uthyrda filmer");
-            Console.WriteLine("8: Avsluta");
+            Console.WriteLine("8: Räkna ut sen återlämningskostnad");
+            Console.WriteLine("9: Avsluta");
 
             switch (Console.ReadLine())
             {
@@ -106,8 +107,32 @@ class MainMenu
                 }
                     break;
 
-
                 case "8":
+                    Console.WriteLine("Förseningskostnad för återlämnade filmer:");
+
+                    var senaFilmer = _db.Query<LateFilm>(@"
+                    SELECT Film.Title, 
+                    Film.IsNew, 
+                    DATEDIFF(RentFilm.ReturnDate, 
+                    RentFilm.DueDate) AS LateDays 
+                    FROM RentFilm 
+                    JOIN FilmCassette ON FilmCassette.Id = RentFilm.CassetteId 
+                    JOIN Film ON Film.Id = FilmCassette.FilmId 
+                    WHERE RentFilm.ReturnDate 
+                    IS NOT NULL AND RentFilm.ReturnDate > RentFilm.DueDate");
+
+                    foreach (var film in senaFilmer)
+                    {
+                        int avgiftPerDygn = film.IsNew ? 49 : 29;
+                        int kostnad = film.LateDays * avgiftPerDygn;
+
+                        Console.WriteLine($"{film.Title}: {film.LateDays} sena dygn, {kostnad} kr");
+                    }
+                    break;
+
+
+
+                case "9":
                     Console.WriteLine("Programmet avslutas");
                     return;
                 default:
@@ -116,6 +141,11 @@ class MainMenu
             }
         }
     }
-}
 
-//Se filmer som inte är återlämnade
+    private class LateFilm
+    {
+        public string Title { get; set; }
+        public bool IsNew { get; set; }
+        public int LateDays { get; set; }
+    }
+}
