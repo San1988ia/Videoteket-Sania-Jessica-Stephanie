@@ -90,6 +90,63 @@ class MainMenu
                     break;
                 case "6":
                     Console.WriteLine("Ditt val: 6");
+
+                    var films = _db.Query<Film>(
+                        "SELECT Id, Title, IsNew FROM Film"
+                     );
+                     foreach(var listedFilm in films)
+                    {
+                        string status = listedFilm.IsNew ? "Ny" : "Gammal";
+                        Console.WriteLine($"Id: {listedFilm.Id}, Titel: {listedFilm.Title}, Status: {status}");
+                    }
+
+                    Console.WriteLine("Ange Id på filmen du vill ändra: ");
+
+                    if(!int.TryParse(Console.ReadLine(),out int filmId))
+                    {
+                        Console.WriteLine("Du måste ange ett giltigt nummer.");
+                        break;
+                    }
+
+                    var film = _db.Query<Film>( 
+                        "SELECT Id, Title, IsNew FROM Film WHERE Id = @Id",
+                        new { Id = filmId}
+                    ).FirstOrDefault();
+
+                    if (film == null)
+                    {
+                        Console.WriteLine("Filmen hittades inte.");
+                        break;
+                    }
+
+                    Console.WriteLine($"Du har valt: {film.Title}");
+                    Console.WriteLine("1: Markera som ny");
+                    Console.WriteLine("2: Markera som gammal");
+                    string? val = Console.ReadLine();
+
+                    if (val != "1" && val !="2")
+                    {
+                        Console.WriteLine("Ogiltigt val. Välj 1 eller 2");
+                        break;
+                    }
+
+                    bool nyStatus = val == "1";
+
+                    int result = _db.Execute(
+                        "UPDATE Film SET IsNew = @IsNew WHERE Id = @Id",
+                        new { IsNew = nyStatus, Id = film.Id}
+                     );
+
+                     if (result > 0)
+                    {
+                        Console.WriteLine(
+                            $"Filmen är nu märkt som: {(nyStatus ? "Ny" : "Gammal")}"
+                         );
+                    }
+                    else
+                    {
+                        Console.WriteLine("Ingen rad uppdaterades; statusen kan redan vara vald.");
+                    }
                     break;
                 case "7":
                     Console.WriteLine("Filmer som inte är återlämnade:");
