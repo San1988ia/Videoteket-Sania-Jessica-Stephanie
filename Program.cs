@@ -10,5 +10,6 @@ using IDbConnection db = new MySqlConnection(connectionString);
 
 var customerRepository = new CustomerRepository(connectionString);
 var filmRepository = new FilmRepository(connectionString);
-var menu = new MainMenu(db, customerRepository, filmRepository);
+var rentalRepository = new RentalRepository(connectionString);
+var menu = new MainMenu(db, customerRepository, filmRepository, rentalRepository);
 menu.Run();

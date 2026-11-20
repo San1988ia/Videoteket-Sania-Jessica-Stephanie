@@ -9,15 +9,18 @@ class MainMenu
     private readonly IDbConnection _db;
     private readonly CustomerRepository _customerRepository;
     private readonly FilmRepository _filmRepository;
+    private readonly RentalRepository _rentalRepository;
 
     public MainMenu(
         IDbConnection db,
         CustomerRepository customerRepository,
-        FilmRepository filmRepository)
+        FilmRepository filmRepository,
+        RentalRepository rentalRepository)
     {
         _db = db;
         _customerRepository = customerRepository;
         _filmRepository = filmRepository;
+        _rentalRepository = rentalRepository;
     }
 
     public void Run()
@@ -44,188 +47,8 @@ class MainMenu
                     new ListFilms(_filmRepository).Run();
                     break;
                 case "2":
-                {
-                    Console.WriteLine("Ditt val: Låna film");
-                    List<AvailableCassette> availableCassettes;
-                    try
-                    {
-                        availableCassettes = _db.Query<AvailableCassette>(
-                            @"SELECT fc.Id, fc.Barcode, f.Title, f.IsNew
-                              FROM FilmCassette fc
-                              JOIN Film f ON f.Id = fc.FilmId
-                              WHERE NOT EXISTS (
-                                  SELECT 1
-                                  FROM RentFilm rf
-                                  WHERE rf.CassetteId = fc.Id
-                                    AND rf.ReturnDate IS NULL
-                              )
-                              ORDER BY f.Title, fc.Id").ToList();
-                    }
-                    catch (MySql.Data.MySqlClient.MySqlException ex)
-                    {
-                        Console.WriteLine($"Kassetterna kunde inte hämtas på grund av ett databasfel: {ex.Message}");
-                        break;
-                    }
-
-                    if (availableCassettes.Count == 0)
-                    {
-                        Console.WriteLine("Det finns inga tillgängliga kassetter.");
-                        break;
-                    }
-
-                    Console.WriteLine("Tillgängliga kassetter:");
-                    foreach (var availableCassette in availableCassettes)
-                    {
-                        int pricePerDay = availableCassette.IsNew ? 49 : 29;
-                        Console.WriteLine(
-                            $"ID: {availableCassette.Id}, Film: {availableCassette.Title}, " +
-                            $"Streckkod: {availableCassette.Barcode}, Pris: {pricePerDay} kr/dygn");
-                    }
-
-                    Console.Write("Kundens personnummer (ÅÅÅÅMMDDxxxx): ");
-                    string? rentalPersonNumber = Console.ReadLine()?.Trim();
-                    Console.Write("Kassettens ID: ");
-                    bool validCassette = int.TryParse(Console.ReadLine(), out int cassetteId);
-                    Console.Write("Antal dygn: ");
-                    bool validDays = int.TryParse(Console.ReadLine(), out int days);
-                    Console.Write("Kvittonummer: ");
-                    bool validReceipt = int.TryParse(Console.ReadLine(), out int receiptNumber);
-
-                    if (string.IsNullOrWhiteSpace(rentalPersonNumber))
-                    {
-                        Console.WriteLine("Ange kundens personnummer.");
-                        break;
-                    }
-
-                    if (!validCassette || !validDays || !validReceipt ||
-                        cassetteId <= 0 || days <= 0 || receiptNumber <= 0)
-                    {
-                        Console.WriteLine("Kassett-ID, antal dygn och kvittonummer måste vara positiva heltal.");
-                        break;
-                    }
-
-                    try
-                    {
-                        DateTime rentalDate = DateTime.Now;
-                        DateTime dueDate = rentalDate.Date.AddDays(days);
-
-                        if (_db.State == ConnectionState.Closed)
-                        {
-                            _db.Open();
-                        }
-
-                        using var transaction = _db.BeginTransaction();
-                        int totalPrice;
-
-                        try
-                        {
-                            var matchingCustomerIds = _db.Query<int>(
-                                @"SELECT Id FROM Customer
-                                  WHERE PersonNumber = @PersonNumber
-                                  LIMIT 2 FOR UPDATE",
-                                new { PersonNumber = rentalPersonNumber },
-                                transaction: transaction).ToList();
-
-                            if (matchingCustomerIds.Count == 0)
-                            {
-                                throw new InvalidOperationException("Ingen kund hittades med det personnumret.");
-                            }
-
-                            if (matchingCustomerIds.Count > 1)
-                            {
-                                throw new InvalidOperationException("Flera kunder har samma personnummer. Kontrollera kundregistret.");
-                            }
-
-                            var cassette = _db.QuerySingleOrDefault<CassetteForRental>(
-                                @"SELECT fc.Id, f.IsNew
-                                  FROM FilmCassette fc
-                                  JOIN Film f ON f.Id = fc.FilmId
-                                  WHERE fc.Id = @CassetteId
-                                  FOR UPDATE",
-                                new { CassetteId = cassetteId },
-                                transaction: transaction);
-
-                            if (cassette == null)
-                            {
-                                throw new InvalidOperationException("Kassetten hittades inte.");
-                            }
-
-                            int? activeRentalId = _db.QueryFirstOrDefault<int?>(
-                                @"SELECT Id
-                                  FROM RentFilm
-                                  WHERE CassetteId = @CassetteId
-                                    AND ReturnDate IS NULL
-                                  LIMIT 1
-                                  FOR UPDATE",
-                                new { CassetteId = cassetteId },
-                                transaction: transaction);
-
-                            if (activeRentalId != null)
-                            {
-                                throw new InvalidOperationException("Kassetten är redan utlånad.");
-                            }
-
-                            int pricePerDay = cassette.IsNew ? 49 : 29;
-                            totalPrice = checked(pricePerDay * days);
-
-                            _db.Execute(
-                                @"INSERT INTO Rental (CustomerId, RentalDateTime, ReceiptNumber)
-                                  VALUES (@CustomerId, @RentalDateTime, @ReceiptNumber)",
-                                new
-                                {
-                                    CustomerId = matchingCustomerIds[0],
-                                    RentalDateTime = rentalDate,
-                                    ReceiptNumber = receiptNumber
-                                },
-                                transaction: transaction);
-
-                            long rentalId = _db.ExecuteScalar<long>(
-                                "SELECT LAST_INSERT_ID()",
-                                transaction: transaction);
-
-                            _db.Execute(
-                                @"INSERT INTO RentFilm
-                                    (RentalId, CassetteId, DueDate, ReturnDate, RentalPrice)
-                                  VALUES
-                                    (@RentalId, @CassetteId, @DueDate, NULL, @RentalPrice)",
-                                new
-                                {
-                                    RentalId = rentalId,
-                                    CassetteId = cassetteId,
-                                    DueDate = dueDate,
-                                    RentalPrice = totalPrice
-                                },
-                                transaction: transaction);
-
-                            transaction.Commit();
-                        }
-                        catch
-                        {
-                            transaction.Rollback();
-                            throw;
-                        }
-
-                        Console.WriteLine($"Hyran kostar {totalPrice} kr.");
-                        Console.WriteLine($"Återlämnas senast: {dueDate:yyyy-MM-dd}");
-                    }
-                    catch (InvalidOperationException ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                    }
-                    catch (ArgumentOutOfRangeException)
-                    {
-                        Console.WriteLine("Ange ett giltigt antal dygn.");
-                    }
-                    catch (OverflowException)
-                    {
-                        Console.WriteLine("Antalet dygn är för stort för att beräkna priset.");
-                    }
-                    catch (MySql.Data.MySqlClient.MySqlException ex)
-                    {
-                        Console.WriteLine($"Hyran kunde inte sparas på grund av ett databasfel: {ex.Message}");
-                    }
+                    new RentCassette(_rentalRepository).Run();
                     break;
-                }
                 case "3":
                     Console.WriteLine("Ditt val: 3");
                     break;
@@ -319,20 +142,6 @@ class MainMenu
                     break;
             }
         }
-    }
-
-    private class AvailableCassette
-    {
-        public int Id { get; set; }
-        public string? Barcode { get; set; }
-        public string? Title { get; set; }
-        public bool IsNew { get; set; }
-    }
-
-    private class CassetteForRental
-    {
-        public int Id { get; set; }
-        public bool IsNew { get; set; }
     }
 
     private class LateFilm
