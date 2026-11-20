@@ -1,4 +1,5 @@
 using System.Data;
+using System.Globalization;
 using System.Security.Cryptography;
 using Dapper;
 using Org.BouncyCastle.Math.EC;
@@ -238,6 +239,30 @@ class MainMenu
                     break;
                 case "10":
                     Console.WriteLine("Ditt val: Ta bort film");
+                    var removeFilms = _db.Query<Film>(
+                        "SELECT Id, Title, ReleaseDate, Description, IsActive, IsNew FROM Film").ToList();
+
+                    foreach (var film in removeFilms)
+                    {
+                        Console.WriteLine(
+                            $"Id: {film.Id}\nTitel: {film.Title}\nUtgivningsdatum: {film.ReleaseDate}\nBeskrivning: {film.Description}\nAktiv: {(film.IsActive ? "Ja" : "Nej")}\nÅldersstatus: {(film.IsNew ? "Ny" : "Gammal")}\n\n");
+                    }
+
+                    Console.WriteLine("Vilken film vill du ta bort? Id:");
+
+                    if (int.TryParse(Console.ReadLine(), out int removeFilmId))
+                    {
+                        string deleteFilmSql = "DELETE FROM Film WHERE Id = @Id";
+                        int antalBorttagna = _db.Execute(deleteFilmSql, new { Id = removeFilmId });
+
+                        Console.WriteLine(antalBorttagna == 1
+                            ? "Filmen togs bort."
+                            : "Ingen film hittades med det ID:t.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Ange ett giltigt ID.");
+                    }
                     break;
                 case "11":
                     Console.WriteLine("Programmet avslutas");
