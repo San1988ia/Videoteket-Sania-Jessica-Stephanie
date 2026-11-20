@@ -8,5 +8,6 @@ string connectionString =
     ?? throw new InvalidOperationException("Miljövariabeln VIDEOTEKET_CONNECTION_STRING saknas.");
 using IDbConnection db = new MySqlConnection(connectionString);
 
-var menu = new MainMenu(db);
+var customerRepository = new CustomerRepository(connectionString);
+var menu = new MainMenu(db, customerRepository);
 menu.Run();

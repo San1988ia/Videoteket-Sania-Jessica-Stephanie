@@ -7,10 +7,12 @@ using Org.BouncyCastle.Math.EC;
 class MainMenu
 {
     private readonly IDbConnection _db;
+    private readonly CustomerRepository _customerRepository;
 
-    public MainMenu(IDbConnection db)
+    public MainMenu(IDbConnection db, CustomerRepository customerRepository)
     {
         _db = db;
+        _customerRepository = customerRepository;
     }
 
     public void Run()
@@ -47,49 +49,10 @@ class MainMenu
                     Console.WriteLine("Ditt val: 3");
                     break;
                 case "4":
-                    Console.WriteLine("Ditt val: Lägg till kund");
-                    Console.WriteLine("Lägg till namn (Förnamn Efternamn):");
-                    string name = Console.ReadLine();
-                    Console.WriteLine("Lägg till email (namn@email.com):");
-                    string email = Console.ReadLine();
-                    Console.WriteLine("Lägg till telefon (1234567890):");
-                    string telephone = Console.ReadLine();
-                    Console.WriteLine("Lägg till adress (Gatnamn 1, Staden):");
-                    string address = Console.ReadLine();
-                    Console.WriteLine("Lägg till personnummer (ÅÅÅÅMMDDxxxx):");
-                    string personNumber = Console.ReadLine();
-
-                    string sql = @"INSERT INTO Customer (Name, Email, Telephone, Address, PersonNumber)
-                    VALUES (@Name, @Email, @Telephone, @Address, @PersonNumber)";
-
-                    _db.Execute(sql, new { Name = name, Email = email, Telephone = telephone, Address = address, PersonNumber = personNumber });
+                    new AddCustomer(_customerRepository).Run();
                     break;
                 case "5":
-                    Console.WriteLine("Ditt val: Ta bort kund");
-                    var customers = _db.Query<Customer>(
-                        "SELECT Id, Name, Email, Telephone, Address, PersonNumber FROM Customer").ToList();
-
-                    foreach (var customer in customers)
-                    {
-                        Console.WriteLine(
-                            $"Id: {customer.Id}\nNamn: {customer.Name}\nE-post: {customer.Email}\nTelefon: {customer.Telephone}\nAdress: {customer.Address}\nPersonnummber: {customer.PersonNumber}\n\n");
-                    }
-
-                    Console.WriteLine("Vilken kund vill du ta bort? Id:");
-
-                    if (int.TryParse(Console.ReadLine(), out int customerId))
-                    {
-                        string deleteCustomerSql = "DELETE FROM Customer WHERE Id = @Id";
-                        int antalBorttagna = _db.Execute(deleteCustomerSql, new { Id = customerId });
-
-                        Console.WriteLine(antalBorttagna == 1
-                            ? "Kunden togs bort."
-                            : "Ingen kund hittades med det ID:t.");
-                    }
-                    else
-                    {
-                        Console.WriteLine("Ange ett giltigt ID.");
-                    }
+                    new DeleteCustomer(_customerRepository).Run();
                     break;
                 case "6":
                     Console.WriteLine("Ditt val: 6");
