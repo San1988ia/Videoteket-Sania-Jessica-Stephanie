@@ -19,7 +19,11 @@ class MainMenu
             Console.WriteLine("1: Se utbud");
             Console.WriteLine("2: Låna film");
             Console.WriteLine("3: Återlämna film");
-            Console.WriteLine("4: Avsluta");
+            Console.WriteLine("4: Lägga till kund");
+            Console.WriteLine("5: Ta bort kund");
+            Console.WriteLine("6: Ändra status på film");
+            Console.WriteLine("7: Se uthyrda filmer");
+            Console.WriteLine("8: Avsluta");
 
             switch (Console.ReadLine())
             {
@@ -37,6 +41,18 @@ class MainMenu
                     Console.WriteLine("Ditt val: 3");
                     break;
                 case "4":
+                    Console.WriteLine("Ditt val: 4");
+                    break;
+                case "5":
+                    Console.WriteLine("Ditt val: 5");
+                    break;
+                case "6":
+                    Console.WriteLine("Ditt val: 6");
+                    break;
+                case "7":
+                    Console.WriteLine("Ditt val: 7");
+                    break;
+                case "8":
                     Console.WriteLine("Programmet avslutas");
                     return;
                 default:
