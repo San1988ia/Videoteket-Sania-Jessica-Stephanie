@@ -59,7 +59,31 @@ class MainMenu
                     _db.Execute(sql, new { Name = name, Email = email, Telephone = telephone, Address = address, PersonNumber = personNumber });
                     break;
                 case "5":
-                    Console.WriteLine("Ditt val: 5");
+                    Console.WriteLine("Ditt val: Ta bort kund");
+                    var customers = _db.Query<Customer>(
+                        "SELECT Id, Name, Email, Telephone, Address, PersonNumber FROM Customer").ToList();
+
+                    foreach (var customer in customers)
+                    {
+                        Console.WriteLine(
+                            $"Id: {customer.Id}\nNamn: {customer.Name}\nE-post: {customer.Email}\nTelefon: {customer.Telephone}\nAdress: {customer.Address}\nPersonnummber: {customer.PersonNumber}\n\n");
+                    }
+
+                    Console.WriteLine("Vilken kund vill du ta bort? Id:");
+
+                    if (int.TryParse(Console.ReadLine(), out int customerId))
+                    {
+                        string deleteCustomerSql = "DELETE FROM Customer WHERE Id = @Id";
+                        int antalBorttagna = _db.Execute(deleteCustomerSql, new { Id = customerId });
+
+                        Console.WriteLine(antalBorttagna == 1
+                            ? "Kunden togs bort."
+                            : "Ingen kund hittades med det ID:t.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Ange ett giltigt ID.");
+                    }
                     break;
                 case "6":
                     Console.WriteLine("Ditt val: 6");
