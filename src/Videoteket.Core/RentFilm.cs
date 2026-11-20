@@ -7,3 +7,4 @@ class RentFilm
     public DateTime ReturnDate {get; set;}
     public int RentalPrice {get; set;}
 }
+

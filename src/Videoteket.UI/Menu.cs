@@ -1,5 +1,7 @@
 using System.Data;
+using System.Security.Cryptography;
 using Dapper;
+using Org.BouncyCastle.Math.EC;
 
 class MainMenu
 {
@@ -50,8 +52,22 @@ class MainMenu
                     Console.WriteLine("Ditt val: 6");
                     break;
                 case "7":
-                    Console.WriteLine("Ditt val: 7");
+                    Console.WriteLine("Filmer som inte är återlämnade:");
+
+                    var filmer = _db.Query<string>(@"
+                    SELECT DISTINCT f.Title
+                    FROM RentFilm rf
+                    JOIN FilmCassette fc ON fc.Id = rf.CassetteId
+                    JOIN Film f ON f.Id = fc.FilmId
+                    WHERE rf.ReturnDate is null");
+
+                foreach (var film in filmer)
+                {
+                 Console.WriteLine(film);
+                }
                     break;
+
+
                 case "8":
                     Console.WriteLine("Programmet avslutas");
                     return;
@@ -62,3 +78,5 @@ class MainMenu
         }
     }
 }
+
+//Se filmer som inte är återlämnade
