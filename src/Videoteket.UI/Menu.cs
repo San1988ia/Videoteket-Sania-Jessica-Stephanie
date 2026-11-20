@@ -41,11 +41,7 @@ class MainMenu
             switch (Console.ReadLine())
             {
                 case "1":
-                    var titlar = _db.Query<string>("SELECT Title FROM Film");
-                    foreach (var titel in titlar)
-                    {
-                        Console.WriteLine(titel);
-                    }
+                    new ListFilms(_filmRepository).Run();
                     break;
                 case "2":
                     Console.WriteLine("Ditt val: 2");
