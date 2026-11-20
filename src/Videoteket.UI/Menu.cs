@@ -8,11 +8,16 @@ class MainMenu
 {
     private readonly IDbConnection _db;
     private readonly CustomerRepository _customerRepository;
+    private readonly FilmRepository _filmRepository;
 
-    public MainMenu(IDbConnection db, CustomerRepository customerRepository)
+    public MainMenu(
+        IDbConnection db,
+        CustomerRepository customerRepository,
+        FilmRepository filmRepository)
     {
         _db = db;
         _customerRepository = customerRepository;
+        _filmRepository = filmRepository;
     }
 
     public void Run()
@@ -125,76 +130,10 @@ class MainMenu
 
 
                 case "9":
-                    Console.WriteLine("Ditt val: Lägg till film");
-                    Console.WriteLine("Lägg till titel:");
-                    string title = Console.ReadLine();
-                    Console.WriteLine("Lägg till utgivningsdatum (ÅÅÅÅ-MM-DD):");
-
-                    if (!DateTime.TryParseExact(
-                            Console.ReadLine(),
-                            "yyyy-MM-dd",
-                            System.Globalization.CultureInfo.InvariantCulture,
-                            System.Globalization.DateTimeStyles.None,
-                            out DateTime releaseDate))
-                    {
-                        Console.WriteLine("Ogiltigt datum. Skriv till exempel 2026-11-20.");
-                        break;
-                    }
-                    Console.WriteLine("Lägg till beskrivning:");
-                    string description = Console.ReadLine();
-                    Console.WriteLine("Är filmen ny? J/N");
-                    string isNewString = Console.ReadLine().ToLower();
-                    bool isNew;
-                    if (isNewString == "j")
-                    {
-                        isNew = true;
-                    }
-                    else if (isNewString == "n")
-                    {
-                        isNew = false;
-                    }
-                    else
-                    {
-                        Console.WriteLine("Skriv J eller N.");
-                        break;
-                    }
-                    bool isActive = true;
-
-                    string addFilmSql = @"INSERT INTO Film (Title, ReleaseDate, Description, IsActive, IsNew)
-                    VALUES (@Title, @ReleaseDate, @Description, @IsActive, @IsNew)";
-
-                    int rowsAdded = _db.Execute(addFilmSql, new { Title = title, ReleaseDate = releaseDate, Description = description, IsActive = isActive, IsNew = isNew });
-                    if (rowsAdded > 0)
-                    {
-                        Console.WriteLine("Filmen är tillagd.");
-                    }
+                    new AddFilm(_filmRepository).Run();
                     break;
                 case "10":
-                    Console.WriteLine("Ditt val: Ta bort film");
-                    var removeFilms = _db.Query<Film>(
-                        "SELECT Id, Title, ReleaseDate, Description, IsActive, IsNew FROM Film").ToList();
-
-                    foreach (var film in removeFilms)
-                    {
-                        Console.WriteLine(
-                            $"Id: {film.Id}\nTitel: {film.Title}\nUtgivningsdatum: {film.ReleaseDate}\nBeskrivning: {film.Description}\nAktiv: {(film.IsActive ? "Ja" : "Nej")}\nÅldersstatus: {(film.IsNew ? "Ny" : "Gammal")}\n\n");
-                    }
-
-                    Console.WriteLine("Vilken film vill du ta bort? Id:");
-
-                    if (int.TryParse(Console.ReadLine(), out int removeFilmId))
-                    {
-                        string deleteFilmSql = "DELETE FROM Film WHERE Id = @Id";
-                        int antalBorttagna = _db.Execute(deleteFilmSql, new { Id = removeFilmId });
-
-                        Console.WriteLine(antalBorttagna == 1
-                            ? "Filmen togs bort."
-                            : "Ingen film hittades med det ID:t.");
-                    }
-                    else
-                    {
-                        Console.WriteLine("Ange ett giltigt ID.");
-                    }
+                    new DeleteFilm(_filmRepository).Run();
                     break;
                 case "11":
                     Console.WriteLine("Programmet avslutas");

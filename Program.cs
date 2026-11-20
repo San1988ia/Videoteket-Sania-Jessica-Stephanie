@@ -9,5 +9,6 @@ string connectionString =
 using IDbConnection db = new MySqlConnection(connectionString);
 
 var customerRepository = new CustomerRepository(connectionString);
-var menu = new MainMenu(db, customerRepository);
+var filmRepository = new FilmRepository(connectionString);
+var menu = new MainMenu(db, customerRepository, filmRepository);
 menu.Run();
